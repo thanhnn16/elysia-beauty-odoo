@@ -1,0 +1,43 @@
+# Định nghĩa các dịch vụ (container)
+services:
+  # Dịch vụ Odoo
+  odoo:
+    image: odoo:latest
+    container_name: odoo
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8069:8069" # Map cổng 8069 của container ra cổng 8069 trên máy host
+    environment:
+      - HOST=db
+      - USER=elysia
+      - PASSWORD=${POSTGRES_PASSWORD}
+      - ODOO_ADMIN_PASSWORD=${ODOO_ADMIN_PASSWORD} # Mật khẩu admin mặc định của Odoo
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons # Thư mục chứa các addon tùy chỉnh
+    restart: unless-stopped
+
+  # Dịch vụ cơ sở dữ liệu PostgreSQL
+  db:
+    image: postgres:17.5-alpine # Sử dụng image postgres nhẹ với Alpine
+    container_name: postgres_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=elysia
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Dịch vụ Redis (cho session, cache,...)
+  redis:
+    image: redis:8.0.2-alpine # Sử dụng image redis nhẹ với Alpine
+    container_name: redis
+    restart: unless-stopped
+
+# Định nghĩa các volume để lưu trữ dữ liệu
+volumes:
+  odoo_data:
+  pg_data:
